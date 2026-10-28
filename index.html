@@ -1,0 +1,108 @@
+
+<!DOCTYPE html>
+<html lang="lo">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LCC AI Video Studio</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0b0d12;color:#f5f5f5;font-family:Arial,sans-serif}
+header{padding:22px 18px;border-bottom:1px solid #333}
+.logo{color:#e8bd62;font-size:25px;font-weight:bold}
+header p{color:#aaa;font-size:13px}
+main{max-width:900px;margin:auto;padding:20px}
+h2{font-size:19px}
+.panel{background:#151922;border:1px solid #2c303b;border-radius:14px;padding:18px;margin:16px 0}
+label{display:block;margin:15px 0 8px;color:#e8bd62}
+input[type=file],textarea{width:100%;padding:12px;border-radius:8px;border:1px solid #414653;background:#0d1118;color:white}
+textarea{min-height:110px;resize:vertical}
+button{background:#e8bd62;color:#161616;font-weight:bold;border:0;border-radius:9px;padding:13px 16px;margin:8px 5px 0 0;cursor:pointer}
+video{width:100%;max-height:360px;margin-top:14px;background:#000;border-radius:10px}
+.note{font-size:13px;line-height:1.7;color:#aaa}
+footer{text-align:center;padding:25px;color:#777;font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">LCC AI VIDEO STUDIO</div>
+  <p>Video editing · Lao subtitles · AI voice workflow</p>
+</header>
+<main>
+  <section class="panel">
+    <h2>🎬 1. Upload your video</h2>
+    <label for="videoFile">Choose a video file</label>
+    <input id="videoFile" type="file" accept="video/*">
+    <video id="preview" controls playsinline hidden></video>
+    <p id="videoInfo" class="note">Your video preview stays in this browser.</p>
+  </section>
+
+  <section class="panel">
+    <h2>📝 2. Video text and Lao subtitles</h2>
+    <label for="source">Original text or transcript</label>
+    <textarea id="source" placeholder="Paste the original dialogue or transcript here..."></textarea>
+
+    <label for="lao">Lao subtitles</label>
+    <textarea id="lao" placeholder="ວາງຄຳແປພາສາລາວຂອງທ່ານຢູ່ບ່ອນນີ້..."></textarea>
+
+    <button id="copyText">Copy original text</button>
+    <button id="downloadSrt">Download subtitles (.srt)</button>
+  </section>
+
+  <section class="panel">
+    <h2>🔊 3. Lao AI voice</h2>
+    <p class="note">This first version prepares your workflow. Automatic translation, AI voice generation and automatic video editing require an AI service connection, which is not yet configured.</p>
+    <button id="voiceInfo">Check voice setup</button>
+    <p id="voiceStatus" class="note"></p>
+  </section>
+</main>
+<footer>LCC AI Video Studio · Prototype · No API keys stored in this page</footer>
+
+<script>
+const fileInput=document.getElementById('videoFile');
+const preview=document.getElementById('preview');
+let videoURL=null;
+
+fileInput.addEventListener('change',()=>{
+  const file=fileInput.files[0];
+  if(!file)return;
+  if(videoURL)URL.revokeObjectURL(videoURL);
+  videoURL=URL.createObjectURL(file);
+  preview.src=videoURL;
+  preview.hidden=false;
+  document.getElementById('videoInfo').textContent=
+    file.name+' · '+(file.size/1024/1024).toFixed(1)+' MB';
+});
+
+document.getElementById('copyText').addEventListener('click',async()=>{
+  const text=document.getElementById('source').value;
+  if(!text){alert('Please enter the original text first.');return;}
+  try{
+    await navigator.clipboard.writeText(text);
+    alert('Original text copied.');
+  }catch(e){
+    alert('Copy is unavailable. Please select and copy the text manually.');
+  }
+});
+
+document.getElementById('downloadSrt').addEventListener('click',()=>{
+  const lines=document.getElementById('lao').value.trim().split('\n').filter(Boolean);
+  if(!lines.length){alert('Please enter Lao subtitles first.');return;}
+  const srt=lines.map((line,i)=>
+    (i+1)+'\n00:00:'+String(i*5).padStart(2,'0')+',000 --> 00:00:'+String(i*5+5).padStart(2,'0')+',000\n'+line
+  ).join('\n\n');
+  const blob=new Blob(['\uFEFF'+srt],{type:'text/plain;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='LCC-Lao-Subtitles.srt';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+document.getElementById('voiceInfo').addEventListener('click',()=>{
+  document.getElementById('voiceStatus').textContent=
+    'AI voice is not connected yet. No audio has been generated.';
+});
+</script>
+</body>
+</html>
